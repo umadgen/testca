@@ -1,4 +1,5 @@
 import 'package:flitv_ca/features/authentication/domain/repository/user_credentials.inmemory.repository.dart';
+import 'package:flitv_ca/features/authentication/domain/repository/user_credentials.secure_storage.repository.dart';
 import 'package:flitv_ca/features/authentication/domain/user_credentials.dart';
 import 'package:flitv_ca/features/authentication/usecases/add_credentials.usecase.dart';
 import 'package:flitv_ca/features/authentication/usecases/edit_credentials.usecase.dart';
@@ -181,12 +182,12 @@ void main() {
 
 class AuthentificationFixture {
   Error? error;
-  late InMemoryUserCredentialsRepository userRepository;
+  late SecureStorageUserCredentialsRepository userRepository;
   late AddCredentialsUseCase addCredentialsUseCase;
   late EditCredentialsUseCase editCredentialsUseCase;
 
   AuthentificationFixture() {
-    userRepository = InMemoryUserCredentialsRepository();
+    userRepository = SecureStorageUserCredentialsRepository();
     addCredentialsUseCase =
         AddCredentialsUseCase(userRepository: userRepository);
   }
