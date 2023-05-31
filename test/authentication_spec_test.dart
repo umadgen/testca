@@ -1,8 +1,9 @@
-import 'package:flitv_ca/features/authentication/domain/repository/user_credentials.inmemory.repository.dart';
-import 'package:flitv_ca/features/authentication/domain/repository/user_credentials.secure_storage.repository.dart';
-import 'package:flitv_ca/features/authentication/domain/user_credentials.dart';
-import 'package:flitv_ca/features/authentication/usecases/add_credentials.usecase.dart';
-import 'package:flitv_ca/features/authentication/usecases/edit_credentials.usecase.dart';
+import 'package:flitv_ca/features/authentication/domain/repository/user_credentials.securestorage.repository.dart';
+import 'package:flitv_ca/features/authentication/data/models/user_credentials.dart';
+import 'package:flitv_ca/features/authentication/domain/usecases/add_credentials.usecase.dart';
+import 'package:flitv_ca/features/authentication/domain/usecases/edit_credentials.usecase.dart';
+import 'package:flitv_ca/features/authentication/domain/usecases/login_credentials.usecase.dart';
+import 'package:flitv_ca/features/authentication/domain/usecases/logout_credentials.usecase.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -177,6 +178,101 @@ void main() {
         });
       });
     });
+
+    group('Name', () {
+      test("Alice add a name of 128 characters", () async {
+        await fixture
+            .whenUserAddCredentials(builder.withName("myname").buildMap());
+        await fixture.thenUserCredentialsShouldBe(
+            List.filled(1, builder.withName("myname").buildUserCredentials()));
+      });
+
+      test("Alice update her name", () async {
+        await fixture.givenExistingUsers(
+            [builder.withName("BadName").withId("1").buildUserCredentials()]);
+        await fixture.whenUserEditCredentials(
+            builder.withName("GoodName").withId("1").buildMap());
+        await fixture.thenUserCredentialsShouldBe(List.filled(1,
+            builder.withName("GoodName").withId("1").buildUserCredentials()));
+      });
+      group(
+          'Rule: A name can have a length of 128 characters maximum and must be not empty',
+          () {
+        test("Alice add a name of 129 characters", () async {
+          const nameWith129characters =
+              "googlegooglegooglegooglegooglegooglegooglegooglegooglegooglegooglegooglegooglegooglegooglegooglegooglegooglegooglegooglegooglegoo";
+
+          await fixture.whenUserAddCredentials(
+              builder.withName(nameWith129characters).buildMap());
+          fixture.thenErrorShouldBe(NameTooLongError());
+          await fixture.thenUserCredentialsShouldBe(List.empty());
+        });
+
+        test("Alice update with a name of 129 characters ", () async {
+          const nameWith129characters =
+              "googlegooglegooglegooglegooglegooglegooglegooglegooglegooglegooglegooglegooglegooglegooglegooglegooglegooglegooglegooglegooglegoo";
+          await fixture.givenExistingUsers(
+              [builder.withName("BadName").withId("1").buildUserCredentials()]);
+          await fixture.whenUserEditCredentials(
+              builder.withName(nameWith129characters).withId("1").buildMap());
+
+          fixture.thenErrorShouldBe(NameTooLongError());
+          await fixture.thenUserCredentialsShouldBe(
+              [builder.withName("BadName").withId("1").buildUserCredentials()]);
+        });
+
+        test("Alice add a empty name", () async {
+          await fixture.whenUserAddCredentials(builder.withName("").buildMap());
+          fixture.thenErrorShouldBe(EmptyNameError());
+          await fixture.thenUserCredentialsShouldBe(List.empty());
+        });
+
+        test("Alice update with a empty name", () async {
+          await fixture.givenExistingUsers(
+              [builder.withName("BadName").withId("1").buildUserCredentials()]);
+          await fixture.whenUserEditCredentials(
+              builder.withName("").withId("1").buildMap());
+
+          fixture.thenErrorShouldBe(EmptyNameError());
+          await fixture.thenUserCredentialsShouldBe(
+              [builder.withName("BadName").withId("1").buildUserCredentials()]);
+        });
+      });
+    });
+    group('User can connect with a existing user', () {
+      test("Alice choose the profil Bob", () async {
+        await fixture.givenExistingUsers([
+          builder.withUsername("Bob").withId("First").buildUserCredentials(),
+          builder
+              .withUsername("Charlie")
+              .withId("Second")
+              .buildUserCredentials()
+        ]);
+        await fixture.whenUserLoginCredential("Second");
+
+        await fixture.thenCurrentUserShouldBe(builder
+            .withUsername("Charlie")
+            .withId("Second")
+            .buildUserCredentials());
+      });
+
+      test("Alice logout", () async {
+        await fixture.givenExistingUsers([
+          builder.withUsername("Bob").withName("First").buildUserCredentials(),
+          builder
+              .withUsername("Charlie")
+              .withName("Second")
+              .buildUserCredentials()
+        ]);
+        await fixture.givenCurrentUser(builder
+            .withUsername("Charlie")
+            .withName("Second")
+            .buildUserCredentials());
+
+        fixture.whenUserLogoutCredential();
+        await fixture.thenCurrentUserShouldBe(null);
+      });
+    });
   });
 }
 
@@ -185,9 +281,17 @@ class AuthentificationFixture {
   late SecureStorageUserCredentialsRepository userRepository;
   late AddCredentialsUseCase addCredentialsUseCase;
   late EditCredentialsUseCase editCredentialsUseCase;
+  late LoginCredentialsUseCase loginCredentialsUseCase;
+  late LogoutCredentialsUseCase logoutCredentialsUseCase;
 
   AuthentificationFixture() {
     userRepository = SecureStorageUserCredentialsRepository();
+    editCredentialsUseCase =
+        EditCredentialsUseCase(userRepository: userRepository);
+    loginCredentialsUseCase =
+        LoginCredentialsUseCase(userRepository: userRepository);
+    logoutCredentialsUseCase =
+        LogoutCredentialsUseCase(userRepository: userRepository);
     addCredentialsUseCase =
         AddCredentialsUseCase(userRepository: userRepository);
   }
@@ -195,6 +299,28 @@ class AuthentificationFixture {
   Future<void> whenUserAddCredentials(Map<String, String> uc) async {
     try {
       await addCredentialsUseCase.handle(uc);
+    } catch (e) {
+      error = e as Error?;
+      if (kDebugMode) {
+        print(e);
+      }
+    }
+  }
+
+  Future<void> whenUserLoginCredential(String id) async {
+    try {
+      await loginCredentialsUseCase.handle(id);
+    } catch (e) {
+      error = e as Error?;
+      if (kDebugMode) {
+        print(e);
+      }
+    }
+  }
+
+  void whenUserLogoutCredential() async {
+    try {
+      await logoutCredentialsUseCase.handle();
     } catch (e) {
       error = e as Error?;
       if (kDebugMode) {
@@ -214,6 +340,14 @@ class AuthentificationFixture {
     }
   }
 
+  Future<void> givenExistingUsers(List<UserCredentials> l) async {
+    await userRepository.givenExistingUsers(l);
+  }
+
+  Future<void> givenCurrentUser(UserCredentials u) async {
+    await userRepository.selectCurrentUser(u);
+  }
+
   void thenErrorShouldBe<T extends Error>(T e) {
     expect(error, isA<T>());
   }
@@ -221,5 +355,10 @@ class AuthentificationFixture {
   Future<void> thenUserCredentialsShouldBe(List<UserCredentials> lu) async {
     var l = await userRepository.getAllUsers();
     assert(listEquals(l, lu));
+  }
+
+  Future<void> thenCurrentUserShouldBe(UserCredentials? user) async {
+    UserCredentials? currentUser = userRepository.getCurrentUser();
+    expect(currentUser, equals(user));
   }
 }

@@ -2,12 +2,14 @@ import 'package:equatable/equatable.dart';
 
 class UserCredentials extends Equatable {
   final String id;
+  final NameText name;
   final UsernameText username;
   final PasswordText password;
   final UrlText baseUrl;
 
   const UserCredentials._({
     required this.id,
+    required this.name,
     required this.baseUrl,
     required this.username,
     required this.password,
@@ -25,23 +27,35 @@ class UserCredentials extends Equatable {
     return baseUrl.value;
   }
 
-  UserCredentials copyWith({String? u, String? p, String? bu}) =>
+  String get getName {
+    return name.value;
+  }
+
+  String get getId {
+    return id;
+  }
+
+  UserCredentials copyWith(
+          {String? i, String? n, String? u, String? p, String? bu}) =>
       UserCredentials._(
-        id: id,
+        id: i ?? id,
+        name: n != null ? NameText.of(n) : name,
         username: u != null ? UsernameText.of(u) : username,
         password: p != null ? PasswordText.of(p) : password,
         baseUrl: bu != null ? UrlText.of(bu) : baseUrl,
       );
   Map toJson() => ({
         "id": id,
-        "password": password.value,
-        "username": username.value,
-        "baseUrl": baseUrl.value.toString()
+        "name": getName,
+        "password": getPassword,
+        "username": getUsername,
+        "baseUrl": getBaseUrl.toString()
       });
 
   factory UserCredentials.fromData(Map<String, String> data) {
     return UserCredentials._(
-      id: data['id']!,
+      id: data["id"]!,
+      name: NameText.of(data['name']!),
       username: UsernameText.of(data["username"]!),
       baseUrl: UrlText.of(data["baseUrl"]!),
       password: PasswordText.of(data["password"]!),
@@ -49,7 +63,7 @@ class UserCredentials extends Equatable {
   }
 
   @override
-  List<Object?> get props => [username, password, baseUrl];
+  List<Object?> get props => [username, password, baseUrl, name, id];
 }
 
 class UsernameText extends Equatable {
@@ -92,6 +106,26 @@ class PasswordText extends Equatable {
   List<Object?> get props => [value];
 }
 
+class NameText extends Equatable {
+  final String value;
+
+  const NameText._(this.value);
+
+  static of(String value) {
+    final String valueSanitized = value.trim();
+    if (valueSanitized.isEmpty) {
+      throw EmptyNameError();
+    }
+    if (valueSanitized.length > 128) {
+      throw NameTooLongError();
+    }
+    return NameText._(value);
+  }
+
+  @override
+  List<Object?> get props => [value];
+}
+
 class UrlText extends Equatable {
   final Uri value;
 
@@ -128,3 +162,7 @@ class UsernameTooLongError extends Error {}
 class EmptyPasswordError extends Error {}
 
 class PasswordTooLongError extends Error {}
+
+class NameTooLongError extends Error {}
+
+class EmptyNameError extends Error {}

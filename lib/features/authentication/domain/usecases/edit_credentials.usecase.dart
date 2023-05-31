@@ -1,12 +1,5 @@
-import 'package:flitv_ca/features/authentication/domain/repository/user_credentials.repository.dart';
-import 'package:flitv_ca/features/authentication/domain/user_credentials.dart';
-
-class EditCredentialsUserCommand {
-  late String id;
-  late String username;
-  late String password;
-  late String baseUrl;
-}
+import 'package:flitv_ca/features/authentication/data/repository/user_credentials.repository.dart';
+import 'package:flitv_ca/features/authentication/data/models/user_credentials.dart';
 
 class EditCredentialsUseCase {
   late UserCredentialsRepository userRepository;
@@ -16,6 +9,7 @@ class EditCredentialsUseCase {
     UserCredentials newUser = await userRepository.getByID(command['id']!);
 
     await userRepository.save(newUser.copyWith(
+        n: command["name"],
         bu: command['baseUrl']!,
         p: command['password']!,
         u: command['username']!));

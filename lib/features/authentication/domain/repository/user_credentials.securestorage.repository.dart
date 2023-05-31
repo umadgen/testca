@@ -1,11 +1,13 @@
 import 'dart:convert';
 
-import 'package:flitv_ca/features/authentication/domain/repository/user_credentials.repository.dart';
-import 'package:flitv_ca/features/authentication/domain/user_credentials.dart';
+import 'package:flitv_ca/features/authentication/data/repository/user_credentials.repository.dart';
+import 'package:flitv_ca/features/authentication/data/models/user_credentials.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class SecureStorageUserCredentialsRepository
     implements UserCredentialsRepository {
+  @override
+  UserCredentials? currentUser;
   final storage = const FlutterSecureStorage();
 
   @override
@@ -49,5 +51,25 @@ class SecureStorageUserCredentialsRepository
 
   Future<void> _save(List<UserCredentials> user) async {
     storage.write(key: "users", value: jsonEncode(user));
+  }
+
+  @override
+  Future<void> givenExistingUsers(List<UserCredentials> users) async {
+    await _save(users);
+  }
+
+  @override
+  Future<void> selectCurrentUser(UserCredentials user) async {
+    currentUser = user;
+  }
+
+  @override
+  UserCredentials? getCurrentUser() {
+    return currentUser;
+  }
+
+  @override
+  void logoutCurrentUser() {
+    currentUser = null;
   }
 }
