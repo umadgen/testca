@@ -1,8 +1,8 @@
 import 'package:flitv_ca/features/authentication/data/models/user_credentials.dart';
-import 'package:flitv_ca/features/authentication/data/repository/user_credentials.repository.dart';
+import 'package:flitv_ca/features/authentication/data/repository/auth.repository.dart';
 
 class LoginCredentialsUseCase {
-  late UserCredentialsRepository userRepository;
+  late AuthRepository userRepository;
   LoginCredentialsUseCase({required this.userRepository});
 
   Future<void> handle(String id) async {

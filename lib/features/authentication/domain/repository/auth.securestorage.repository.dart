@@ -1,11 +1,10 @@
 import 'dart:convert';
 
-import 'package:flitv_ca/features/authentication/data/repository/user_credentials.repository.dart';
+import 'package:flitv_ca/features/authentication/data/repository/auth.repository.dart';
 import 'package:flitv_ca/features/authentication/data/models/user_credentials.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
-class SecureStorageUserCredentialsRepository
-    implements UserCredentialsRepository {
+class SecureStorageAuthRepository implements AuthRepository {
   @override
   UserCredentials? currentUser;
   final storage = const FlutterSecureStorage();

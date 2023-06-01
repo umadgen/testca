@@ -1,7 +1,7 @@
-import 'package:flitv_ca/features/authentication/data/repository/user_credentials.repository.dart';
+import 'package:flitv_ca/features/authentication/data/repository/auth.repository.dart';
 import 'package:flitv_ca/features/authentication/data/models/user_credentials.dart';
 
-class InMemoryUserCredentialsRepository implements UserCredentialsRepository {
+class InMemoryAuthRepository implements AuthRepository {
   @override
   UserCredentials? currentUser;
   late List<UserCredentials> listUserCredentials = List.empty(growable: true);
@@ -26,7 +26,7 @@ class InMemoryUserCredentialsRepository implements UserCredentialsRepository {
   @override
   Future<UserCredentials> getByID(String id) {
     UserCredentials userExist = listUserCredentials.firstWhere(
-        (element) => element.name == id,
+        (element) => element.id == id,
         orElse: () => throw UserNotFound());
     return Future(() => userExist);
   }

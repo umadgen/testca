@@ -1,6 +1,6 @@
 import '../models/user_credentials.dart';
 
-abstract class UserCredentialsRepository {
+abstract class AuthRepository {
   UserCredentials? currentUser;
   Future<void> save(UserCredentials user);
 

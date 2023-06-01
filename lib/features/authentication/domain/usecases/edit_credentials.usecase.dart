@@ -1,8 +1,8 @@
-import 'package:flitv_ca/features/authentication/data/repository/user_credentials.repository.dart';
+import 'package:flitv_ca/features/authentication/data/repository/auth.repository.dart';
 import 'package:flitv_ca/features/authentication/data/models/user_credentials.dart';
 
 class EditCredentialsUseCase {
-  late UserCredentialsRepository userRepository;
+  late AuthRepository userRepository;
   EditCredentialsUseCase({required this.userRepository});
 
   Future<void> handle(Map<String, String> command) async {
