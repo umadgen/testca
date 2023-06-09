@@ -1,12 +1,10 @@
 import 'dart:convert';
 
-import 'package:flitv_ca/features/authentication/data/repository/auth.repository.dart';
+import 'package:flitv_ca/features/authentication/data/repository/user.repository.dart';
 import 'package:flitv_ca/features/authentication/data/models/user_credentials.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
-class SecureStorageAuthRepository implements AuthRepository {
-  @override
-  UserCredentials? currentUser;
+class SecureStorageUserRepository implements UserRepository {
   final storage = const FlutterSecureStorage();
 
   @override
@@ -27,9 +25,8 @@ class SecureStorageAuthRepository implements AuthRepository {
   Future<void> save(UserCredentials user) async {
     List<UserCredentials> listUsers = await getAllUsers();
     try {
-      UserCredentials userExist = await getByID(user.id);
-
-      listUsers[listUsers.indexOf(userExist)] = user;
+      UserCredentials existingUser = await getUser(user.id);
+      listUsers[listUsers.indexOf(existingUser)] = user;
     } catch (error) {
       if (error is UserNotFound) {
         listUsers.add(user);
@@ -41,11 +38,10 @@ class SecureStorageAuthRepository implements AuthRepository {
   }
 
   @override
-  Future<UserCredentials> getByID(String id) async {
-    UserCredentials userExist = (await getAllUsers()).firstWhere(
-        (element) => element.id == id,
+  Future<UserCredentials> getUser(String id) async {
+    final List<UserCredentials> allUsers = await getAllUsers();
+    return allUsers.firstWhere((element) => element.id == id,
         orElse: () => throw UserNotFound());
-    return userExist;
   }
 
   Future<void> _save(List<UserCredentials> user) async {
@@ -55,20 +51,5 @@ class SecureStorageAuthRepository implements AuthRepository {
   @override
   Future<void> givenExistingUsers(List<UserCredentials> users) async {
     await _save(users);
-  }
-
-  @override
-  Future<void> selectCurrentUser(UserCredentials user) async {
-    currentUser = user;
-  }
-
-  @override
-  UserCredentials? getCurrentUser() {
-    return currentUser;
-  }
-
-  @override
-  void logoutCurrentUser() {
-    currentUser = null;
   }
 }

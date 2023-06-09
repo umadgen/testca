@@ -1,17 +1,8 @@
 import '../models/user_credentials.dart';
 
-abstract class AuthRepository {
+abstract class AuthenticationRepository {
   UserCredentials? currentUser;
-  Future<void> save(UserCredentials user);
 
-  Future<List<UserCredentials>> getAllUsers();
-  Future<UserCredentials> getByID(String id);
-  UserCredentials? getCurrentUser();
-
-  Future<void> givenExistingUsers(List<UserCredentials> users);
-
-  Future<void> selectCurrentUser(UserCredentials id);
-  void logoutCurrentUser();
+  Future<void> loginUser({required UserCredentials user});
+  Future<void> logoutUser();
 }
-
-class UserNotFound extends Error {}

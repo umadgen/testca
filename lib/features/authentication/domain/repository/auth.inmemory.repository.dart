@@ -1,53 +1,17 @@
-import 'package:flitv_ca/features/authentication/data/repository/auth.repository.dart';
 import 'package:flitv_ca/features/authentication/data/models/user_credentials.dart';
+import 'package:flitv_ca/features/authentication/data/repository/auth.repository.dart';
 
-class InMemoryAuthRepository implements AuthRepository {
+class InMemoryAuth implements AuthenticationRepository {
   @override
   UserCredentials? currentUser;
-  late List<UserCredentials> listUserCredentials = List.empty(growable: true);
 
   @override
-  Future<List<UserCredentials>> getAllUsers() {
-    return Future(() => listUserCredentials);
-  }
-
-  @override
-  Future<void> save(UserCredentials user) async {
-    try {
-      UserCredentials userExist = await getByID(user.id);
-      listUserCredentials[listUserCredentials.indexOf(userExist)] = user;
-    } catch (error) {
-      if (error is UserNotFound) {
-        listUserCredentials.add(user);
-      }
-    }
-  }
-
-  @override
-  Future<UserCredentials> getByID(String id) {
-    UserCredentials userExist = listUserCredentials.firstWhere(
-        (element) => element.id == id,
-        orElse: () => throw UserNotFound());
-    return Future(() => userExist);
-  }
-
-  @override
-  Future<void> givenExistingUsers(List<UserCredentials> users) {
-    return Future(() => listUserCredentials = users);
-  }
-
-  @override
-  Future<void> selectCurrentUser(UserCredentials user) async {
+  Future<void> loginUser({required UserCredentials user}) async {
     currentUser = user;
   }
 
   @override
-  UserCredentials? getCurrentUser() {
-    return currentUser;
-  }
-
-  @override
-  void logoutCurrentUser() {
+  Future<void> logoutUser() async {
     currentUser = null;
   }
 }

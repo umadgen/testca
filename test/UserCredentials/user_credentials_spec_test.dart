@@ -1,14 +1,9 @@
-import 'package:flitv_ca/features/authentication/domain/repository/auth.securestorage.repository.dart';
 import 'package:flitv_ca/features/authentication/data/models/user_credentials.dart';
-import 'package:flitv_ca/features/authentication/domain/usecases/add_credentials.usecase.dart';
-import 'package:flitv_ca/features/authentication/domain/usecases/edit_credentials.usecase.dart';
-import 'package:flitv_ca/features/authentication/domain/usecases/login_credentials.usecase.dart';
-import 'package:flitv_ca/features/authentication/domain/usecases/logout_credentials.usecase.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'user_credentials_builder.dart';
+import 'user_credentials_fixture.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -29,10 +24,9 @@ void main() {
             1, builder.withUsername("newUsername").buildUserCredentials()));
       });
       test("Alice update her username", () async {
-        await fixture.whenUserAddCredentials(
-            builder.withUsername("newUsername").buildMap());
-        await fixture.thenUserCredentialsShouldBe(List.filled(
-            1, builder.withUsername("newUsername").buildUserCredentials()));
+        await fixture.givenExistingUsers(
+            [builder.withUsername("newUsername").buildUserCredentials()]);
+
         await fixture.whenUserAddCredentials(
             builder.withUsername("NotMyUsername").buildMap());
         await fixture.thenUserCredentialsShouldBe(List.filled(
@@ -239,126 +233,5 @@ void main() {
         });
       });
     });
-    group('User can connect with a existing user', () {
-      test("Alice choose the profil Bob", () async {
-        await fixture.givenExistingUsers([
-          builder.withUsername("Bob").withId("First").buildUserCredentials(),
-          builder
-              .withUsername("Charlie")
-              .withId("Second")
-              .buildUserCredentials()
-        ]);
-        await fixture.whenUserLoginCredential("Second");
-
-        await fixture.thenCurrentUserShouldBe(builder
-            .withUsername("Charlie")
-            .withId("Second")
-            .buildUserCredentials());
-      });
-
-      test("Alice logout", () async {
-        await fixture.givenExistingUsers([
-          builder.withUsername("Bob").withName("First").buildUserCredentials(),
-          builder
-              .withUsername("Charlie")
-              .withName("Second")
-              .buildUserCredentials()
-        ]);
-        await fixture.givenCurrentUser(builder
-            .withUsername("Charlie")
-            .withName("Second")
-            .buildUserCredentials());
-
-        fixture.whenUserLogoutCredential();
-        await fixture.thenCurrentUserShouldBe(null);
-      });
-    });
   });
-}
-
-class AuthentificationFixture {
-  Error? error;
-  late SecureStorageAuthRepository userRepository;
-  late AddCredentialsUseCase addCredentialsUseCase;
-  late EditCredentialsUseCase editCredentialsUseCase;
-  late LoginCredentialsUseCase loginCredentialsUseCase;
-  late LogoutCredentialsUseCase logoutCredentialsUseCase;
-
-  AuthentificationFixture() {
-    userRepository = SecureStorageAuthRepository();
-    editCredentialsUseCase =
-        EditCredentialsUseCase(userRepository: userRepository);
-    loginCredentialsUseCase =
-        LoginCredentialsUseCase(userRepository: userRepository);
-    logoutCredentialsUseCase =
-        LogoutCredentialsUseCase(userRepository: userRepository);
-    addCredentialsUseCase =
-        AddCredentialsUseCase(userRepository: userRepository);
-  }
-
-  Future<void> whenUserAddCredentials(Map<String, String> uc) async {
-    try {
-      await addCredentialsUseCase.handle(uc);
-    } catch (e) {
-      error = e as Error?;
-      if (kDebugMode) {
-        print(e);
-      }
-    }
-  }
-
-  Future<void> whenUserLoginCredential(String id) async {
-    try {
-      await loginCredentialsUseCase.handle(id);
-    } catch (e) {
-      error = e as Error?;
-      if (kDebugMode) {
-        print(e);
-      }
-    }
-  }
-
-  void whenUserLogoutCredential() async {
-    try {
-      await logoutCredentialsUseCase.handle();
-    } catch (e) {
-      error = e as Error?;
-      if (kDebugMode) {
-        print(e);
-      }
-    }
-  }
-
-  Future<void> whenUserEditCredentials(Map<String, String> uc) async {
-    try {
-      await editCredentialsUseCase.handle(uc);
-    } catch (e) {
-      if (kDebugMode) {
-        print(e);
-      }
-      error = e as Error?;
-    }
-  }
-
-  Future<void> givenExistingUsers(List<UserCredentials> l) async {
-    await userRepository.givenExistingUsers(l);
-  }
-
-  Future<void> givenCurrentUser(UserCredentials u) async {
-    await userRepository.selectCurrentUser(u);
-  }
-
-  void thenErrorShouldBe<T extends Error>(T e) {
-    expect(error, isA<T>());
-  }
-
-  Future<void> thenUserCredentialsShouldBe(List<UserCredentials> lu) async {
-    var l = await userRepository.getAllUsers();
-    assert(listEquals(l, lu));
-  }
-
-  Future<void> thenCurrentUserShouldBe(UserCredentials? user) async {
-    UserCredentials? currentUser = userRepository.getCurrentUser();
-    expect(currentUser, equals(user));
-  }
 }

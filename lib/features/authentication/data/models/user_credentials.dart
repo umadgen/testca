@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+import 'package:uuid/uuid.dart';
 
 class UserCredentials extends Equatable {
   final String id;
@@ -7,13 +8,13 @@ class UserCredentials extends Equatable {
   final PasswordText password;
   final UrlText baseUrl;
 
-  const UserCredentials._({
-    required this.id,
+  UserCredentials._({
+    String? id,
     required this.name,
     required this.baseUrl,
     required this.username,
     required this.password,
-  });
+  }) : id = id ?? const Uuid().v4();
 
   String get getUsername {
     return username.value;
@@ -54,7 +55,7 @@ class UserCredentials extends Equatable {
 
   factory UserCredentials.fromData(Map<String, String> data) {
     return UserCredentials._(
-      id: data["id"]!,
+      id: data['id']!,
       name: NameText.of(data['name']!),
       username: UsernameText.of(data["username"]!),
       baseUrl: UrlText.of(data["baseUrl"]!),
@@ -63,7 +64,12 @@ class UserCredentials extends Equatable {
   }
 
   @override
-  List<Object?> get props => [username, password, baseUrl, name, id];
+  List<Object?> get props => [
+        username,
+        password,
+        baseUrl,
+        name,
+      ];
 }
 
 class UsernameText extends Equatable {
