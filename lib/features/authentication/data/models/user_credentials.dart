@@ -55,7 +55,7 @@ class UserCredentials extends Equatable {
 
   factory UserCredentials.fromData(Map<String, String> data) {
     return UserCredentials._(
-      id: data['id']!,
+      id: data['id'],
       name: NameText.of(data['name']!),
       username: UsernameText.of(data["username"]!),
       baseUrl: UrlText.of(data["baseUrl"]!),

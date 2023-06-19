@@ -6,8 +6,8 @@ class UserCredentialsDataBuilder {
   UserCredentialsDataBuilder(
       [this.data = const {
         "id": "52",
-        "name": "name",
-        "username": "test",
+        "name": "nameeeeee",
+        "username": "testeeeeee",
         "password": "password",
         "baseUrl": "http://www.google.fr"
       }]);
